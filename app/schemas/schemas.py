@@ -6,7 +6,7 @@ from app.models.models import TransactionType, TransactionStatus
 
 # ── Auth Schemas ──────────────────────────────────────────────
 class UserCreate(BaseModel):
-    full_name: str = Field(..., example="Mark Ogunyemi")
+    full_name: str = Field(..., example="Mark Momoh")
     email: EmailStr = Field(..., example="mark@example.com")
     phone: Optional[str] = Field(None, example="+2348012345678")
     password: str = Field(..., min_length=6, example="securepass123")

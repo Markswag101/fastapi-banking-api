@@ -10,7 +10,7 @@ app = FastAPI(
     description="A secure banking REST API with JWT authentication, account management, transfers, and transaction history.",
     version="1.0.0",
     contact={
-        "name": "Mark Ogunyemi",
+        "name": "Mark Momoh",
         "url": "https://markswag101.github.io/Portfolio",
     },
 )

@@ -2,7 +2,7 @@
 
 A secure, production-ready banking REST API built with **FastAPI**, **SQLAlchemy**, and **JWT Authentication**.
 
-Built by [Mark Ogunyemi](https://markswag101.github.io/Portfolio) — Senior Technical Programme Manager & Fintech Practitioner.
+Built by [Mark Momoh](https://markswag101.github.io/Portfolio) — Senior Technical Programme Manager & Fintech Practitioner.
 
 ---
 
