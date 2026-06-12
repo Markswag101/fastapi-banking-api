@@ -4,9 +4,11 @@ from app.db.database import get_db
 from app.models.models import User, Account, Transaction, TransactionType
 from app.schemas.schemas import AccountCreate, AccountOut, DepositWithdraw, TransactionOut
 from app.core.security import get_current_user
+from app.core.email import email_deposit, email_withdrawal
 from typing import List
 import random
 import uuid
+import threading
 
 router = APIRouter()
 
@@ -73,8 +75,9 @@ def deposit(
         raise HTTPException(status_code=404, detail="Account not found")
 
     account.balance += payload.amount
+    ref = generate_reference()
     txn = Transaction(
-        reference=generate_reference(),
+        reference=ref,
         transaction_type=TransactionType.deposit,
         amount=payload.amount,
         description=payload.description or "Deposit",
@@ -83,6 +86,14 @@ def deposit(
     db.add(txn)
     db.commit()
     db.refresh(txn)
+
+    # Send deposit email in background
+    threading.Thread(
+        target=email_deposit,
+        args=(current_user.full_name, current_user.email, payload.amount, account_number, account.balance, ref),
+        daemon=True,
+    ).start()
+
     return txn
 
 
@@ -103,8 +114,9 @@ def withdraw(
         raise HTTPException(status_code=400, detail="Insufficient funds")
 
     account.balance -= payload.amount
+    ref = generate_reference()
     txn = Transaction(
-        reference=generate_reference(),
+        reference=ref,
         transaction_type=TransactionType.withdrawal,
         amount=payload.amount,
         description=payload.description or "Withdrawal",
@@ -113,4 +125,12 @@ def withdraw(
     db.add(txn)
     db.commit()
     db.refresh(txn)
+
+    # Send withdrawal email in background
+    threading.Thread(
+        target=email_withdrawal,
+        args=(current_user.full_name, current_user.email, payload.amount, account_number, account.balance, ref),
+        daemon=True,
+    ).start()
+
     return txn

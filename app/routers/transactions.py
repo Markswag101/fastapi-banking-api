@@ -5,7 +5,9 @@ from app.db.database import get_db
 from app.models.models import User, Account, Transaction, TransactionType
 from app.schemas.schemas import TransferRequest, TransactionOut, TransactionHistory
 from app.core.security import get_current_user
+from app.core.email import email_transfer_sender, email_transfer_receiver
 import uuid
+import threading
 
 router = APIRouter()
 
@@ -20,7 +22,6 @@ def transfer(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Get sender's first account
     sender_account = db.query(Account).filter(Account.owner_id == current_user.id).first()
     if not sender_account:
         raise HTTPException(status_code=404, detail="Sender account not found")
@@ -38,8 +39,9 @@ def transfer(
     sender_account.balance -= payload.amount
     receiver_account.balance += payload.amount
 
+    ref = generate_reference()
     txn = Transaction(
-        reference=generate_reference(),
+        reference=ref,
         transaction_type=TransactionType.transfer,
         amount=payload.amount,
         description=payload.description or f"Transfer to {receiver_account.account_number}",
@@ -49,6 +51,23 @@ def transfer(
     db.add(txn)
     db.commit()
     db.refresh(txn)
+
+    # Email sender
+    threading.Thread(
+        target=email_transfer_sender,
+        args=(current_user.full_name, current_user.email, payload.amount, receiver_account.account_number, sender_account.balance, ref),
+        daemon=True,
+    ).start()
+
+    # Email receiver
+    receiver_user = db.query(User).filter(User.id == receiver_account.owner_id).first()
+    if receiver_user:
+        threading.Thread(
+            target=email_transfer_receiver,
+            args=(receiver_user.full_name, receiver_user.email, payload.amount, sender_account.account_number, receiver_account.balance, ref),
+            daemon=True,
+        ).start()
+
     return txn
 
 

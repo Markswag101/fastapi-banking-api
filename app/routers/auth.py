@@ -5,6 +5,8 @@ from app.db.database import get_db
 from app.models.models import User
 from app.schemas.schemas import UserCreate, UserLogin, Token, UserOut
 from app.core.security import hash_password, verify_password, create_access_token, get_current_user
+from app.core.email import email_welcome
+import threading
 
 router = APIRouter()
 
@@ -24,6 +26,10 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    # Send welcome email in background
+    threading.Thread(target=email_welcome, args=(user.full_name, user.email), daemon=True).start()
+
     return user
 
 
