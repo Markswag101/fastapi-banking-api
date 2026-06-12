@@ -1,4 +1,5 @@
 import os
+import traceback
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from dotenv import load_dotenv
@@ -12,6 +13,9 @@ APP_NAME = os.getenv("APP_NAME", "FastAPI Banking API")
 
 def send_email(to_email: str, subject: str, html_content: str):
     try:
+        print(f"[Email] Sending to {to_email} | Subject: {subject}")
+        print(f"[Email] API Key starts with: {SENDGRID_API_KEY[:20] if SENDGRID_API_KEY else 'NOT SET'}...")
+        print(f"[Email] Sender: {SENDER_EMAIL}")
         message = Mail(
             from_email=SENDER_EMAIL,
             to_emails=to_email,
@@ -19,9 +23,11 @@ def send_email(to_email: str, subject: str, html_content: str):
             html_content=html_content,
         )
         sg = SendGridAPIClient(SENDGRID_API_KEY)
-        sg.send(message)
+        response = sg.send(message)
+        print(f"[Email] Status code: {response.status_code}")
     except Exception as e:
         print(f"[Email Error] Failed to send email to {to_email}: {e}")
+        traceback.print_exc()
 
 
 def email_welcome(full_name: str, email: str):
