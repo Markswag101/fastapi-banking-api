@@ -51,6 +51,10 @@ tr:last-child td { border-bottom: none; }
 .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
 .login-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 2rem; width: 100%; max-width: 360px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
 .login-title { font-size: 18px; font-weight: 700; margin-bottom: 1.5rem; color: #111; }
+.login-sub { font-size: 13px; color: #666; margin-bottom: 1.2rem; }
+.tabs { display: flex; margin-bottom: 1.5rem; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+.tab { flex: 1; padding: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: #f9fafb; color: #666; }
+.tab.active { background: #6366f1; color: #fff; }
 </style>
 </head>
 <body>
@@ -58,16 +62,45 @@ tr:last-child td { border-bottom: none; }
 <div id="login-view" class="login-wrap">
   <div class="login-card">
     <div class="login-title">🏦 Banking Dashboard</div>
-    <div class="form-row">
-      <label class="form-label">Email</label>
-      <input type="email" id="login-email" placeholder="markmomoh@yopmail.com" />
+    <div class="login-sub">Powered by FastAPI + PostgreSQL</div>
+    <div class="tabs">
+      <button class="tab active" id="tab-login" onclick="switchTab('login')">Sign in</button>
+      <button class="tab" id="tab-register" onclick="switchTab('register')">Register</button>
     </div>
-    <div class="form-row">
-      <label class="form-label">Password</label>
-      <input type="password" id="login-pass" placeholder="••••••••" />
+    <div id="login-form">
+      <div class="form-row">
+        <label class="form-label">Email</label>
+        <input type="email" id="login-email" placeholder="markmomoh@yopmail.com" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Password</label>
+        <input type="password" id="login-pass" placeholder="••••••••" />
+      </div>
+      <div class="msg msg-err" id="login-err"></div>
+      <button class="btn btn-primary" onclick="doLogin()">Sign in</button>
     </div>
-    <div class="msg msg-err" id="login-err"></div>
-    <button class="btn btn-primary" onclick="doLogin()">Sign in</button>
+
+    <div id="register-form" style="display:none;">
+      <div class="form-row">
+        <label class="form-label">Full name</label>
+        <input type="text" id="reg-name" placeholder="Mark Momoh" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Email</label>
+        <input type="email" id="reg-email" placeholder="mark@example.com" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Phone</label>
+        <input type="text" id="reg-phone" placeholder="+2348012345678" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Password</label>
+        <input type="password" id="reg-pass" placeholder="Min 6 characters" />
+      </div>
+      <div class="msg msg-ok" id="reg-ok"></div>
+      <div class="msg msg-err" id="reg-err"></div>
+      <button class="btn btn-primary" onclick="doRegister()">Create account</button>
+    </div>
   </div>
 </div>
 
@@ -135,6 +168,27 @@ tr:last-child td { border-bottom: none; }
           <div><label class="form-label">Description</label><input type="text" id="tr-desc" placeholder="e.g. Rent" /></div>
         </div>
         <button class="btn btn-info" style="margin-top:12px;" onclick="doTransfer()">Send transfer</button>
+        <div id="register-form" style="display:none;">
+  <div class="form-row">
+    <label class="form-label">Full name</label>
+    <input type="text" id="reg-name" placeholder="Mark Momoh" />
+  </div>
+  <div class="form-row">
+    <label class="form-label">Email</label>
+    <input type="email" id="reg-email" placeholder="mark@example.com" />
+  </div>
+  <div class="form-row">
+    <label class="form-label">Phone</label>
+    <input type="text" id="reg-phone" placeholder="+2348012345678" />
+  </div>
+  <div class="form-row">
+    <label class="form-label">Password</label>
+    <input type="password" id="reg-pass" placeholder="Min 6 characters" />
+  </div>
+  <div class="msg msg-ok" id="reg-ok"></div>
+  <div class="msg msg-err" id="reg-err"></div>
+  <button class="btn btn-primary" onclick="doRegister()">Create account</button>
+</div>
         <div class="msg msg-ok" id="tr-ok"></div>
         <div class="msg msg-err" id="tr-err"></div>
       </div>
