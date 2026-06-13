@@ -224,6 +224,25 @@ function switchTab(tab) {
   document.getElementById('tab-login').classList.toggle('active', tab === 'login');
   document.getElementById('tab-register').classList.toggle('active', tab === 'register');
 }
+async function doRegister() {
+  const full_name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const phone = document.getElementById('reg-phone').value.trim();
+  const password = document.getElementById('reg-pass').value;
+  if (!full_name || !email || !password) { showMsg('reg-err', 'Please fill in all required fields', false); return; }
+  if (password.length < 6) { showMsg('reg-err', 'Password must be at least 6 characters', false); return; }
+  try {
+    const res = await fetch(`${BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ full_name, email, phone, password })
+    });
+    const data = await res.json();
+    if (!res.ok) { showMsg('reg-err', data.detail || 'Registration failed', false); return; }
+    showMsg('reg-ok', 'Registered successfully! You can now sign in.', true);
+    setTimeout(() => switchTab('login'), 2000);
+  } catch(e) { showMsg('reg-err', 'Cannot connect to API.', false); }
+}
 let token = '', accountNumber = '';
 
 function showMsg(id, msg, isOk) {
