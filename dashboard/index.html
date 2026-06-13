@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>FastAPI Banking Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a}
+.app{display:flex;min-height:100vh}
+.sidebar{width:210px;flex-shrink:0;background:#fff;border-right:1px solid #e5e5e5;padding:1.5rem 1rem;display:flex;flex-direction:column;gap:4px;position:fixed;top:0;left:0;height:100vh}
+.logo{font-size:15px;font-weight:600;color:#1a1a1a;padding:0 0.5rem 1.25rem;border-bottom:1px solid #e5e5e5;margin-bottom:0.5rem;display:flex;align-items:center;gap:8px}
+.logo i{color:#185FA5}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:14px;color:#666;transition:background 0.15s}
+.nav-item:hover{background:#f5f5f5}
+.nav-item.active{background:#f0f5ff;color:#185FA5;font-weight:500}
+.main{flex:1;margin-left:210px;padding:2rem;max-width:900px}
+.page{display:none}.page.active{display:block}
+.page-title{font-size:20px;font-weight:600;margin-bottom:1.5rem}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:1.5rem}
+.metric{background:#f8f8f8;border-radius:8px;padding:1rem}
+.metric-label{font-size:12px;color:#888;margin-bottom:6px}
+.metric-value{font-size:24px;font-weight:600}
+.metric-sub{font-size:12px;color:#aaa;margin-top:4px}
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.card-title{font-size:14px;font-weight:600;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.txn-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0}
+.txn-row:last-child{border-bottom:none}
+.txn-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+.txn-icon.deposit{background:#EAF3DE;color:#3B6D11}
+.txn-icon.withdrawal{background:#FCEBEB;color:#A32D2D}
+.txn-icon.transfer{background:#E6F1FB;color:#185FA5}
+.txn-info{flex:1}
+.txn-desc{font-size:14px}
+.txn-ref{font-size:11px;color:#aaa;font-family:monospace}
+.txn-amount{font-size:14px;font-weight:600}
+.txn-amount.credit{color:#3B6D11}
+.txn-amount.debit{color:#A32D2D}
+.txn-date{font-size:11px;color:#aaa;text-align:right}
+.form-group{margin-bottom:1rem}
+label{font-size:13px;color:#555;margin-bottom:6px;display:block}
+input,select{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;outline:none;transition:border 0.15s}
+input:focus,select:focus{border-color:#185FA5}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;border:none;font-weight:500;transition:all 0.15s}
+.btn-primary{background:#185FA5;color:#fff}.btn-primary:hover{background:#0C447C}
+.btn-danger{background:#A32D2D;color:#fff}.btn-danger:hover{background:#791F1F}
+.btn-success{background:#3B6D11;color:#fff}.btn-success:hover{background:#27500A}
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:none}
+.alert.success{background:#EAF3DE;color:#3B6D11;display:block}
+.alert.error{background:#FCEBEB;color:#A32D2D;display:block}
+.acc-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.25rem;margin-bottom:.75rem;display:flex;align-items:center;gap:16px}
+.acc-icon{width:44px;height:44px;border-radius:10px;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:22px;color:#185FA5}
+.acc-info{flex:1}
+.acc-number{font-size:12px;color:#aaa;font-family:monospace}
+.acc-name{font-size:15px;font-weight:600}
+.acc-balance{font-size:18px;font-weight:700;text-align:right}
+.acc-currency{font-size:11px;color:#aaa;text-align:right}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5}
+.login-card{background:#fff;border:1px solid #e5e5e5;border-radius:16px;padding:2.5rem;width:380px;box-shadow:0 4px 24px rgba(0,0,0,0.06)}
+.divider{height:1px;background:#e5e5e5;margin:1.25rem 0}
+.loading,.empty{text-align:center;padding:2rem;color:#aaa;font-size:14px}
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.75rem"><i class="ti ti-building-bank" style="font-size:28px;color:#185FA5"></i><span style="font-size:18px;font-weight:700">FastAPI Banking</span></div>
+      <p style="font-size:22px;font-weight:700;margin-bottom:.25rem">Sign in</p>
+      <p style="font-size:14px;color:#888;margin-bottom:1.75rem">Enter your credentials to continue</p>
+      <div id="login-alert"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"/></div>
+      <div class="form-group"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"/></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem" onclick="doLogin()"><i class="ti ti-login"></i> Sign in</button>
+    </div>
+  </div>
+</div>
+<div id="dashboard-screen" style="display:none">
+  <div class="app">
+    <div class="sidebar">
+      <div class="logo"><i class="ti ti-building-bank"></i> FastAPI Bank</div>
+      <div class="nav-item active" onclick="showPage('overview',this)"><i class="ti ti-layout-dashboard"></i> Overview</div>
+      <div class="nav-item" onclick="showPage('accounts',this)"><i class="ti ti-credit-card"></i> Accounts</div>
+      <div class="nav-item" onclick="showPage('deposit',this)"><i class="ti ti-arrow-down-circle"></i> Deposit</div>
+      <div class="nav-item" onclick="showPage('withdraw',this)"><i class="ti ti-arrow-up-circle"></i> Withdraw</div>
+      <div class="nav-item" onclick="showPage('transfer',this)"><i class="ti ti-arrows-exchange"></i> Transfer</div>
+      <div class="nav-item" onclick="showPage('history',this)"><i class="ti ti-list"></i> History</div>
+      <div style="flex:1"></div>
+      <div class="nav-item" onclick="doLogout()"><i class="ti ti-logout"></i> Sign out</div>
+    </div>
+    <div class="main">
+      <div id="page-overview" class="page active">
+        <p class="page-title">Overview</p>
+        <div class="metric-grid">
+          <div class="metric"><div class="metric-label">Total balance</div><div class="metric-value" id="m-balance">—</div><div class="metric-sub">across all accounts</div></div>
+          <div class="metric"><div class="metric-label">Accounts</div><div class="metric-value" id="m-accounts">—</div><div class="metric-sub">active</div></div>
+          <div class="metric"><div class="metric-label">Transactions</div><div class="metric-value" id="m-txns">—</div><div class="metric-sub">total</div></div>
+        </div>
+        <div class="card"><div class="card-title"><i class="ti ti-clock"></i> Recent transactions</div><div id="overview-txns"><div class="loading">Loading…</div></div></div>
+      </div>
+      <div id="page-accounts" class="page">
+        <p class="page-title">Accounts</p>
+        <div id="accounts-list"><div class="loading">Loading…</div></div>
+        <div class="divider"></div>
+        <p style="font-size:15px;font-weight:600;margin-bottom:1rem">Open new account</p>
+        <div class="card">
+          <div id="new-acc-alert"></div>
+          <div class="form-group"><label>Currency</label><select id="new-acc-currency"><option value="NGN">NGN — Nigerian Naira</option><option value="USD">USD — US Dollar</option><option value="GBP">GBP — British Pound</option></select></div>
+          <button class="btn btn-primary" onclick="createAccount()"><i class="ti ti-plus"></i> Open account</button>
+        </div>
+      </div>
+      <div id="page-deposit" class="page">
+        <p class="page-title">Deposit funds</p>
+        <div class="card">
+          <div id="deposit-alert"></div>
+          <div class="form-group"><label>Account</label><select id="deposit-account"></select></div>
+          <div class="form-group"><label>Amount (₦)</label><input type="number" id="deposit-amount" placeholder="0.00" min="1"/></div>
+          <div class="form-group"><label>Description (optional)</label><input type="text" id="deposit-desc" placeholder="e.g. Salary deposit"/></div>
+          <button class="btn btn-success" onclick="doDeposit()"><i class="ti ti-arrow-down-circle"></i> Deposit</button>
+        </div>
+      </div>
+      <div id="page-withdraw" class="page">
+        <p class="page-title">Withdraw funds</p>
+        <div class="card">
+          <div id="withdraw-alert"></div>
+          <div class="form-group"><label>Account</label><select id="withdraw-account"></select></div>
+          <div class="form-group"><label>Amount (₦)</label><input type="number" id="withdraw-amount" placeholder="0.00" min="1"/></div>
+          <div class="form-group"><label>Description (optional)</label><input type="text" id="withdraw-desc" placeholder="e.g. ATM withdrawal"/></div>
+          <button class="btn btn-danger" onclick="doWithdraw()"><i class="ti ti-arrow-up-circle"></i> Withdraw</button>
+        </div>
+      </div>
+      <div id="page-transfer" class="page">
+        <p class="page-title">Transfer funds</p>
+        <div class="card">
+          <div id="transfer-alert"></div>
+          <div class="form-group"><label>Receiver account number</label><input type="text" id="transfer-receiver" placeholder="10-digit account number" maxlength="10"/></div>
+          <div class="form-group"><label>Amount (₦)</label><input type="number" id="transfer-amount" placeholder="0.00" min="1"/></div>
+          <div class="form-group"><label>Description (optional)</label><input type="text" id="transfer-desc" placeholder="e.g. Rent payment"/></div>
+          <button class="btn btn-primary" onclick="doTransfer()"><i class="ti ti-arrows-exchange"></i> Send transfer</button>
+        </div>
+      </div>
+      <div id="page-history" class="page">
+        <p class="page-title">Transaction history</p>
+        <div class="card" style="margin-bottom:1rem"><div class="form-group" style="margin-bottom:0"><label>Select account</label><select id="history-account" onchange="loadHistory()"></select></div></div>
+        <div id="history-list"><div class="empty">Select an account to view history</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const BASE='http://localhost:8000/api/v1';
+let token='',accounts=[];
+function showAlert(id,msg,type){const el=document.getElementById(id);el.className='alert '+type;el.textContent=msg;el.style.display='block';setTimeout(()=>{el.style.display='none';},4000);}
+function fmtAmt(n){return '₦'+Number(n).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtDate(d){return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+function txnIcon(t){const m={deposit:'ti-arrow-down-circle deposit',withdrawal:'ti-arrow-up-circle withdrawal',transfer:'ti-arrows-exchange transfer'};const p=(m[t]||'ti-circle transfer').split(' ');return `<div class="txn-icon ${p[1]}"><i class="ti ${p[0]}"></i></div>`;}
+function renderTxns(txns,c){if(!txns.length){document.getElementById(c).innerHTML='<div class="empty">No transactions yet</div>';return;}document.getElementById(c).innerHTML=txns.slice(0,30).map(t=>`<div class="txn-row">${txnIcon(t.transaction_type)}<div class="txn-info"><div class="txn-desc">${t.description||t.transaction_type}</div><div class="txn-ref">${t.reference}</div></div><div><div class="txn-amount ${t.transaction_type==='deposit'?'credit':'debit'}">${t.transaction_type==='deposit'?'+':'-'}${fmtAmt(t.amount)}</div><div class="txn-date">${fmtDate(t.created_at)}</div></div></div>`).join('');}
+async function api(method,path,body){const o={method,headers:{'Content-Type':'application/json',...(token?{'Authorization':'Bearer '+token}:{})}};if(body)o.body=JSON.stringify(body);const r=await fetch(BASE+path,o);const d=await r.json();if(!r.ok)throw new Error(d.detail||'Request failed');return d;}
+async function doLogin(){const e=document.getElementById('login-email').value.trim(),p=document.getElementById('login-password').value;if(!e||!p){showAlert('login-alert','Please enter email and password','error');return;}try{const fd=new URLSearchParams();fd.append('username',e);fd.append('password',p);const r=await fetch(BASE+'/auth/login',{method:'POST',body:fd});const d=await r.json();if(!r.ok)throw new Error(d.detail||'Login failed');token=d.access_token;document.getElementById('login-screen').style.display='none';document.getElementById('dashboard-screen').style.display='block';loadDashboard();}catch(e){showAlert('login-alert',e.message,'error');}}
+function doLogout(){token='';accounts=[];document.getElementById('dashboard-screen').style.display='none';document.getElementById('login-screen').style.display='block';}
+async function loadDashboard(){try{accounts=await api('GET','/accounts/');const total=accounts.reduce((s,a)=>s+a.balance,0);document.getElementById('m-balance').textContent=fmtAmt(total);document.getElementById('m-accounts').textContent=accounts.length;populateAccountSelects();let all=[];for(const a of accounts){try{const h=await api('GET','/transactions/history/'+a.account_number);all=all.concat(h.transactions);}catch(e){}}all.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));document.getElementById('m-txns').textContent=all.length;renderTxns(all,'overview-txns');renderAccounts();}catch(e){console.error(e);}}
+function renderAccounts(){const el=document.getElementById('accounts-list');if(!accounts.length){el.innerHTML='<div class="empty">No accounts yet.</div>';return;}el.innerHTML=accounts.map(a=>`<div class="acc-card"><div class="acc-icon"><i class="ti ti-credit-card"></i></div><div class="acc-info"><div class="acc-name">${a.account_name}</div><div class="acc-number">${a.account_number}</div></div><div><div class="acc-balance">${fmtAmt(a.balance)}</div><div class="acc-currency">${a.currency}</div></div></div>`).join('');}
+function populateAccountSelects(){['deposit-account','withdraw-account','history-account'].forEach(id=>{document.getElementById(id).innerHTML=accounts.map(a=>`<option value="${a.account_number}">${a.account_number} — ${fmtAmt(a.balance)}</option>`).join('');});}
+async function createAccount(){const c=document.getElementById('new-acc-currency').value;try{await api('POST','/accounts/',{currency:c});showAlert('new-acc-alert','Account opened!','success');await loadDashboard();}catch(e){showAlert('new-acc-alert',e.message,'error');}}
+async function doDeposit(){const an=document.getElementById('deposit-account').value,amt=parseFloat(document.getElementById('deposit-amount').value),desc=document.getElementById('deposit-desc').value||'Deposit';if(!amt||amt<=0){showAlert('deposit-alert','Enter a valid amount','error');return;}try{await api('POST','/accounts/'+an+'/deposit',{amount:amt,description:desc});showAlert('deposit-alert',fmtAmt(amt)+' deposited!','success');document.getElementById('deposit-amount').value='';document.getElementById('deposit-desc').value='';await loadDashboard();}catch(e){showAlert('deposit-alert',e.message,'error');}}
+async function doWithdraw(){const an=document.getElementById('withdraw-account').value,amt=parseFloat(document.getElementById('withdraw-amount').value),desc=document.getElementById('withdraw-desc').value||'Withdrawal';if(!amt||amt<=0){showAlert('withdraw-alert','Enter a valid amount','error');return;}try{await api('POST','/accounts/'+an+'/withdraw',{amount:amt,description:desc});showAlert('withdraw-alert',fmtAmt(amt)+' withdrawn!','success');document.getElementById('withdraw-amount').value='';document.getElementById('withdraw-desc').value='';await loadDashboard();}catch(e){showAlert('withdraw-alert',e.message,'error');}}
+async function doTransfer(){const recv=document.getElementById('transfer-receiver').value.trim(),amt=parseFloat(document.getElementById('transfer-amount').value),desc=document.getElementById('transfer-desc').value||'Transfer';if(!recv||recv.length!==10){showAlert('transfer-alert','Enter a valid 10-digit account number','error');return;}if(!amt||amt<=0){showAlert('transfer-alert','Enter a valid amount','error');return;}try{await api('POST','/transactions/transfer',{receiver_account_number:recv,amount:amt,description:desc});showAlert('transfer-alert','Transfer of '+fmtAmt(amt)+' sent!','success');document.getElementById('transfer-receiver').value='';document.getElementById('transfer-amount').value='';document.getElementById('transfer-desc').value='';await loadDashboard();}catch(e){showAlert('transfer-alert',e.message,'error');}}
+async function loadHistory(){const an=document.getElementById('history-account').value;if(!an)return;document.getElementById('history-list').innerHTML='<div class="loading">Loading…</div>';try{const h=await api('GET','/transactions/history/'+an);if(!h.transactions.length){document.getElementById('history-list').innerHTML='<div class="empty">No transactions</div>';return;}document.getElementById('history-list').innerHTML='<div class="card"><div class="card-title"><i class="ti ti-list"></i> '+h.total_transactions+' transactions</div><div id="history-txns"></div></div>';renderTxns(h.transactions,'history-txns');}catch(e){document.getElementById('history-list').innerHTML='<div class="empty">'+e.message+'</div>';}}
+function showPage(name,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');el.classList.add('active');if(name==='history'&&accounts.length)loadHistory();}
+</script>
+</body>
+</html>
