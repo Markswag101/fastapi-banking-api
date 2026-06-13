@@ -218,6 +218,12 @@ tr:last-child td { border-bottom: none; }
 
 <script>
 const BASE = 'https://web-production-72bd0.up.railway.app/api/v1';
+function switchTab(tab) {
+  document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+}
 let token = '', accountNumber = '';
 
 function showMsg(id, msg, isOk) {
